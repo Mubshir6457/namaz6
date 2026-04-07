@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Namaz Tracker - Daily Limit (Mobile Optimized)</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: system-ui, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            background: #eef5e8;
+            padding: 12px;
+            min-height: 100vh;
+        }
+
+        /* main container */
+        .page {
+            display: none;
+            background: white;
+            padding: 16px;
+            border-radius: 28px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            max-width: 600px;
+            margin: 0 auto;
+            transition: all 0.2s ease;
+        }
+
+        .active {
+            display: block;
+        }
+
+        /* fixed admin button (mobile friendly) */
+        .admin-btn {
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            z-index: 1100;
+        }
+
+        .admin-btn button {
+            background: #1e3a2f;
+            color: white;
+            padding: 8px 18px;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+            cursor: pointer;
+            backdrop-filter: blur(2px);
+            transition: 0.2s;
+        }
+
+        .admin-btn button:active {
+            transform: scale(0.96);
+        }
+
+        /* bottom / top menu */
+        .mobile-menu {
+            display: flex;
+            justify-content: space-between;
+            background: #1e3a2f;
+            padding: 8px 12px;
+            border-radius: 60px;
+            margin-bottom: 20px;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .mobile-menu button {
+            background: #2e7d32;
+            color: white;
+            border: none;
+            padding: 10px 0;
+            border-radius: 60px;
+            font-size: 13px;
+            font-weight: 600;
+            flex: 1;
+            min-width: 64px;
+            cursor: pointer;
+            transition: 0.15s;
+            letter-spacing: 0.3px;
+        }
+
+        .mobile-menu button:active {
+            background: #1b5e20;
+            transform: scale(0.97);
+        }
+
+        /* headers */
+        .header {
+            background: linear-gradient(135deg, #1e3a2f, #2e7d32);
+            color: white;
+            padding: 20px 14px;
+            border-radius: 32px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            letter-spacing: -0.3px;
+            margin-bottom: 4px;
+        }
+
+        .header p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        /* cards */
+        .card {
+            background: white;
+            padding: 18px 14px;
+            border-radius: 28px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+            margin-bottom: 20px;
+            border: 1px solid #e2f0de;
+        }
+
+        .card h3 {
+            color: #1e3a2f;
+            border-left: 5px solid #2e7d32;
+            padding-left: 14px;
+            margin-bottom: 18px;
+            font-size: 1.25rem;
+        }
+
+        input, button {
+            border-radius: 60px;
+            font-size: 16px;
+        }
+
+        input {
+            padding: 14px 18px;
+            border: 1.5px solid #c8e6c9;
+            background: #fefef7;
+            width: 100%;
+            transition: 0.2s;
+        }
+
+        input:focus {
+            border-color: #2e7d32;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(46,125,50,0.2);
+        }
+
+        .btn {
+            padding: 12px 18px;
+            border: none;
+            border-radius: 60px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            margin: 6px 0;
+            display: inline-block;
+            text-align: center;
+            font-size: 15px;
+        }
+
+        .btn-primary {
+            background: #1976d2;
+            color: white;
+        }
+
+        .btn-success {
+            background: #2e7d32;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #c62828;
+            color: white;
+        }
+
+        .submit-all-btn {
+            background: #f57c00;
+            color: white;
+            padding: 14px;
+            font-size: 1rem;
+            width: 100%;
+            border-radius: 60px;
+            font-weight: bold;
+            margin-top: 12px;
+            border: none;
+            transition: 0.2s;
+        }
+
+        .submit-all-btn:disabled {
+            background: #b0bec5;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* student prayer block */
+        .student-namaz-container {
+            background: #f9fff7;
+            padding: 12px;
+            border-radius: 28px;
+            margin: 16px 0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+            border: 1px solid #d4e2d0;
+        }
+
+        .student-name-header {
+            background: #2e7d32;
+            color: white;
+            padding: 10px 12px;
+            border-radius: 40px;
+            margin-bottom: 14px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .namaz-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 8px;
+            border-bottom: 1px solid #e0f0dc;
+        }
+
+        .namaz-label {
+            font-weight: 700;
+            color: #1e3a2f;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .namaz-checkbox {
+            transform: scale(1.4);
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            accent-color: #2e7d32;
+        }
+
+        /* stats & report */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+            gap: 10px;
+            margin: 12px 0;
+        }
+
+        .stat-box {
+            background: #e8f5e9;
+            padding: 10px 5px;
+            border-radius: 24px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .student-item {
+            background: #f4faf2;
+            padding: 14px;
+            border-radius: 24px;
+            margin: 12px 0;
+            border-left: 6px solid #2e7d32;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 60px;
+            margin: 12px 0;
+            text-align: center;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .success {
+            background: #d0f0d0;
+            color: #1e4620;
+            border: 1px solid #a5d6a7;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #b71c1c;
+            border: 1px solid #ef9a9a;
+        }
+
+        .warning {
+            background: #fff3e0;
+            color: #e65100;
+            border: 1px solid #ffcc80;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .form-row input {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            border-radius: 24px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 12px 4px;
+            border-bottom: 1px solid #cfe9cf;
+            text-align: center;
+        }
+
+        th {
+            background: #1e3a2f;
+            color: white;
+            font-weight: 600;
+        }
+
+        .daily-limit-badge {
+            background: #f57c00;
+            color: white;
+            padding: 10px;
+            border-radius: 60px;
+            font-size: 0.85rem;
+            text-align: center;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .info-message {
+            background: #e3f2fd;
+            padding: 12px;
+            border-radius: 24px;
+            margin: 12px 0;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #0d47a1;
+        }
+
+        .login-box {
+            max-width: 360px;
+            margin: 30px auto;
+            text-align: center;
+        }
+
+        .btn-block {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .student-group {
+            background: #f3f9ef;
+            padding: 14px;
+            border-radius: 28px;
+            margin-bottom: 18px;
+        }
+
+        #alertBox {
+            position: fixed;
+            bottom: 20px;
+            left: 16px;
+            right: 16px;
+            z-index: 1200;
+            max-width: 400px;
+            margin: 0 auto;
+            pointer-events: none;
+        }
+
+        .alert {
+            pointer-events: auto;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        @media (max-width: 550px) {
+            body {
+                padding: 8px;
+            }
+            .namaz-row {
+                padding: 12px 4px;
+            }
+            .namaz-label {
+                font-size: 0.9rem;
+            }
+            .mobile-menu button {
+                font-size: 11px;
+                padding: 8px 4px;
+            }
+            .header h1 {
+                font-size: 1.6rem;
+            }
+            .btn, .submit-all-btn {
+                font-size: 0.9rem;
+            }
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="admin-btn">
+    <button onclick="showAdminLogin()">🔐 Admin</button>
+</div>
+
+<!-- Parent Page -->
+<div id="parentPage" class="page active">
+    <div class="header">
+        <h1>📿 Namaz Tracker</h1>
+        <p>Record your children's daily prayers</p>
+    </div>
+    <div class="card">
+        <h3>🎯 Family Roll Number</h3>
+        <div style="text-align:center;">
+            <input type="number" id="rollNumber" placeholder="Enter family roll number" style="text-align:center;font-size:18px;">
+            <button class="btn btn-success" onclick="loadStudentsByRoll()" style="margin-top:12px;width:100%;">🔍 Load Family</button>
+        </div>
+        <div id="familyInfo" style="display:none; margin-top:20px;">
+            <div style="background:#e0f2e0; padding:12px; border-radius:60px; text-align:center;">
+                <h3 style="margin:0;">🏠 Family Roll: <span id="familyRoll"></span></h3>
+                <p><span id="studentCount"></span> students</p>
+            </div>
+            <div id="dailyLimitMsg" class="daily-limit-badge" style="display:none;"></div>
+            <div id="studentsNamazContainer"></div>
+            <button class="submit-all-btn" id="submitBtn" onclick="submitAllNamaz()">✅ Submit Today's Prayers</button>
+        </div>
+    </div>
+</div>
+
+<!-- Admin Login -->
+<div id="loginPage" class="page">
+    <div class="login-box card">
+        <h2 style="color:#1e3a2f;">🔐 Admin Access</h2>
+        <input type="password" id="adminPassword" placeholder="Enter admin password">
+        <button class="btn btn-success btn-block" onclick="login()">Login</button>
+        <button class="btn btn-primary btn-block" onclick="showParentPage()">⬅ Back</button>
+    </div>
+</div>
+
+<!-- Admin Navigation -->
+<div class="mobile-menu" id="navBar" style="display:none;">
+    <button onclick="showPage('adminPage')">👨‍💼 Admin</button>
+    <button onclick="showPage('reportPage')">📊 Report</button>
+    <button onclick="showPage('sheetPage')">📋 All Sheet</button>
+    <button onclick="showPage('settingsPage')">⚙️ Settings</button>
+    <button onclick="logout()" style="background:#c62828;">🚪 Exit</button>
+</div>
+
+<!-- Admin Dashboard -->
+<div id="adminPage" class="page">
+    <div class="header"><h1>👨‍💼 Admin Panel</h1><p>Manage families & students</p></div>
+    <div class="card">
+        <h3>➕ Add Students (same roll)</h3>
+        <div id="studentForms">
+            <div class="form-row"><input type="text" placeholder="Student 1 Name" class="studentName"><input type="number" placeholder="Roll" class="familyRoll"></div>
+            <div class="form-row"><input type="text" placeholder="Student 2 Name" class="studentName"><input type="number" placeholder="Roll" class="familyRoll"></div>
+            <div class="form-row"><input type="text" placeholder="Student 3 Name" class="studentName"><input type="number" placeholder="Roll" class="familyRoll"></div>
+            <div class="form-row"><input type="text" placeholder="Student 4 Name" class="studentName"><input type="number" placeholder="Roll" class="familyRoll"></div>
+            <div class="form-row"><input type="text" placeholder="Student 5 Name" class="studentName"><input type="number" placeholder="Roll" class="familyRoll"></div>
+        </div>
+        <button class="btn btn-success" onclick="addMultipleStudents()" style="width:100%;">➕ Add All Students</button>
+    </div>
+    <div class="card">
+        <h3>🔄 Reset Family Namaz</h3>
+        <input type="number" id="resetRoll" placeholder="Family Roll to reset">
+        <button class="btn btn-danger" onclick="resetFamilyNamaz()" style="width:100%; margin-top:8px;">Reset Counters</button>
+    </div>
+    <div class="card">
+        <h3>📋 Registered Students</h3>
+        <div id="studentList">Loading...</div>
+    </div>
+</div>
+
+<!-- Settings -->
+<div id="settingsPage" class="page">
+    <div class="header"><h1>⚙️ Settings</h1></div>
+    <div class="card">
+        <h3>🔐 Change Admin Password</h3>
+        <input type="password" id="currentPassword" placeholder="Current Password">
+        <input type="password" id="newPassword" placeholder="New Password">
+        <input type="password" id="confirmPassword" placeholder="Confirm Password">
+        <button class="btn btn-success" onclick="changePassword()" style="width:100%;">Update Password</button>
+    </div>
+    <div class="card">
+        <h3>📊 Database Info</h3>
+        <p>👥 Total Students: <strong id="totalStudents">0</strong></p>
+        <p>🏘️ Total Families: <strong id="totalFamilies">0</strong></p>
+    </div>
+</div>
+
+<!-- Report -->
+<div id="reportPage" class="page">
+    <div class="header"><h1>📊 Family Report</h1></div>
+    <div class="card">
+        <input type="number" id="reportRoll" placeholder="Family Roll Number">
+        <button class="btn btn-primary" onclick="loadFamilyReport()" style="width:100%;">📈 Generate Report</button>
+        <div id="reportContent" style="margin-top:20px;"><p style="text-align:center;">Enter roll number to see report</p></div>
+    </div>
+</div>
+
+<!-- All Students Sheet -->
+<div id="sheetPage" class="page">
+    <div class="header"><h1>📋 Complete Record</h1><p>All students & counts</p></div>
+    <div class="card" style="overflow-x:auto; padding: 8px;">
+        <table style="min-width: 480px;">
+            <thead>
+                <tr><th>Roll</th><th>Name</th><th>فجر</th><th>ظہر</th><th>عصر</th><th>مغرب</th><th>عشاء</th><th>Total</th></tr>
+            </thead>
+            <tbody id="allStudentsTable"></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="alertBox"></div>
+
+<script>
+    // Firebase Config
+    const firebaseConfig = {
+        apiKey: "AIzaSyCCsoRgqRrQQvDiSC2Xd07sHN4SXjDSl9c",
+        authDomain: "namaz-3d5e2.firebaseapp.com",
+        databaseURL: "https://namaz-3d5e2-default-rtdb.firebaseio.com",
+        projectId: "namaz-3d5e2",
+        storageBucket: "namaz-3d5e2.firebasestorage.app",
+        messagingSenderId: "502360038002",
+        appId: "1:502360038002:web:34a3aa320f69772261c0eb"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let ADMIN_PASS = "8025";
+    let currentFamilyRoll = null;
+    let studentsData = {};
+    let isAdmin = false;
+
+    function showAlert(msg, type) {
+        const box = document.getElementById('alertBox');
+        box.innerHTML = `<div class="alert ${type}" style="background:${type === 'success' ? '#d0f0d0' : (type === 'warning' ? '#fff3e0' : '#ffe0e0')}">${msg}</div>`;
+        setTimeout(() => box.innerHTML = '', 3000);
+    }
+
+    function showPage(pageId) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        if (pageId === 'adminPage' && isAdmin) { loadStudents(); loadDatabaseInfo(); }
+        if (pageId === 'sheetPage') loadAllStudents();
+        if (pageId === 'reportPage') document.getElementById('reportContent').innerHTML = '<p style="text-align:center;">Enter roll number to view report</p>';
+    }
+
+    function showAdminLogin() { showPage('loginPage'); document.getElementById('adminPassword').focus(); }
+    function showParentPage() { showPage('parentPage'); document.getElementById('navBar').style.display = 'none'; isAdmin = false; currentFamilyRoll = null; studentsData = {}; }
+
+    async function login() {
+        const entered = document.getElementById('adminPassword').value;
+        const snap = await db.ref('admin/password').once('value');
+        const storedPass = snap.val();
+        if (entered === (storedPass || ADMIN_PASS)) {
+            isAdmin = true;
+            document.getElementById('navBar').style.display = 'flex';
+            showPage('adminPage');
+            loadStudents();
+            loadDatabaseInfo();
+            showAlert("✅ Admin login successful", "success");
+        } else {
+            showAlert("❌ Wrong password! Use 8025", "error");
+        }
+        document.getElementById('adminPassword').value = '';
+    }
+
+    function logout() {
+        isAdmin = false;
+        document.getElementById('navBar').style.display = 'none';
+        showPage('parentPage');
+        currentFamilyRoll = null;
+        studentsData = {};
+    }
+
+    async function checkDailySubmissionLimit(familyRoll) {
+        const today = new Date().toISOString().split('T')[0];
+        const snap = await db.ref(`dailySubmissions/${familyRoll}`).once('value');
+        const lastDate = snap.val();
+        if (lastDate === today) return { allowed: false, message: `⚠️ Already submitted today (${today}). Come back tomorrow!` };
+        return { allowed: true, lastDate };
+    }
+
+    async function updateLastSubmissionDate(familyRoll) {
+        const today = new Date().toISOString().split('T')[0];
+        await db.ref(`dailySubmissions/${familyRoll}`).set(today);
+    }
+
+    async function loadStudentsByRoll() {
+        const rollVal = document.getElementById('rollNumber').value.trim();
+        if (!rollVal) { showAlert("Enter family roll number", "error"); return; }
+        const rollNum = parseInt(rollVal);
+        const limitCheck = await checkDailySubmissionLimit(rollNum);
+        
+        db.ref('students').orderByChild('roll').equalTo(rollNum).once('value', snap => {
+            if (!snap.exists()) { showAlert("Family not found", "error"); return; }
+            document.getElementById('familyRoll').innerText = rollNum;
+            const container = document.getElementById('studentsNamazContainer');
+            container.innerHTML = '';
+            studentsData = {};
+            let count = 0;
+            snap.forEach(child => {
+                const student = child.val();
+                const id = child.key;
+                count++;
+                studentsData[id] = { name: student.name, roll: student.roll };
+                const div = document.createElement('div');
+                div.className = 'student-namaz-container';
+                div.innerHTML = `
+                    <div class="student-name-header">⭐ ${student.name}</div>
+                    <div class="namaz-row"><span class="namaz-label">🌅 فجر (Fajr)</span><input type="checkbox" class="namaz-checkbox" id="${id}_fajr" ${!limitCheck.allowed ? 'disabled' : ''}></div>
+                    <div class="namaz-row"><span class="namaz-label">☀️ ظہر (Dhuhr)</span><input type="checkbox" class="namaz-checkbox" id="${id}_dhuhr" ${!limitCheck.allowed ? 'disabled' : ''}></div>
+                    <div class="namaz-row"><span class="namaz-label">🌤️ عصر (Asr)</span><input type="checkbox" class="namaz-checkbox" id="${id}_asr" ${!limitCheck.allowed ? 'disabled' : ''}></div>
+                    <div class="namaz-row"><span class="namaz-label">🌙 مغرب (Maghrib)</span><input type="checkbox" class="namaz-checkbox" id="${id}_maghrib" ${!limitCheck.allowed ? 'disabled' : ''}></div>
+                    <div class="namaz-row"><span class="namaz-label">🌌 عشاء (Isha)</span><input type="checkbox" class="namaz-checkbox" id="${id}_isha" ${!limitCheck.allowed ? 'disabled' : ''}></div>
+                `;
+                container.appendChild(div);
+            });
+            document.getElementById('studentCount').innerText = count;
+            const dailyMsgDiv = document.getElementById('dailyLimitMsg');
+            const submitBtn = document.getElementById('submitBtn');
+            if (!limitCheck.allowed) {
+                dailyMsgDiv.style.display = 'block';
+                dailyMsgDiv.innerHTML = limitCheck.message;
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.6';
+                showAlert(limitCheck.message, 'warning');
+            } else {
+                dailyMsgDiv.style.display = 'none';
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                if (limitCheck.lastDate) {
+                    const infoDiv = document.createElement('div');
+                    infoDiv.className = 'info-message';
+                    infoDiv.innerHTML = `📅 Last submission: ${limitCheck.lastDate}<br>✅ You can submit today's prayers now!`;
+                    container.prepend(infoDiv);
+                    setTimeout(() => infoDiv.remove(), 5000);
+                }
+            }
+            document.getElementById('familyInfo').style.display = 'block';
+            currentFamilyRoll = rollNum;
+            showAlert(`📖 ${count} student(s) loaded`, "success");
+        });
+    }
+
+    async function submitAllNamaz() {
+        if (!currentFamilyRoll || Object.keys(studentsData).length === 0) { showAlert("Load family first", "error"); return; }
+        const limitCheck = await checkDailySubmissionLimit(currentFamilyRoll);
+        if (!limitCheck.allowed) { showAlert(limitCheck.message, 'warning'); loadStudentsByRoll(); return; }
+        
+        let updatesQueue = [];
+        Object.keys(studentsData).forEach(sid => {
+            let selected = [];
+            ['fajr','dhuhr','asr','maghrib','isha'].forEach(p => {
+                const cb = document.getElementById(`${sid}_${p}`);
+                if (cb && cb.checked) selected.push(p);
+            });
+            if (selected.length) updatesQueue.push({ id: sid, prayers: selected });
+        });
+        if (updatesQueue.length === 0) { showAlert("Select at least one prayer", "error"); return; }
+        
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerText = '⏳ Submitting...';
+        let finished = 0, errors = false;
+        
+        updatesQueue.forEach(item => {
+            db.ref('students/' + item.id).once('value', snap => {
+                if (snap.exists()) {
+                    const curr = snap.val();
+                    const updateObj = {};
+                    item.prayers.forEach(p => { updateObj[p] = (curr[p] || 0) + 1; });
+                    updateObj.lastUpdated = new Date().toISOString();
+                    db.ref('students/' + item.id).update(updateObj).then(() => {
+                        item.prayers.forEach(p => { const cb = document.getElementById(`${item.id}_${p}`); if (cb) cb.checked = false; });
+                        finished++;
+                        if (finished === updatesQueue.length && !errors) {
+                            updateLastSubmissionDate(currentFamilyRoll).then(() => {
+                                showAlert(`✅ ${updatesQueue.length} student(s) updated! Can't submit again today.`, "success");
+                                setTimeout(() => {
+                                    document.getElementById('rollNumber').value = '';
+                                    document.getElementById('familyInfo').style.display = 'none';
+                                    currentFamilyRoll = null;
+                                    studentsData = {};
+                                }, 1800);
+                                loadAllStudents();
+                                if (isAdmin) loadStudents();
+                                submitBtn.disabled = false;
+                                submitBtn.innerText = '✅ Submit Today\'s Prayers';
+                            }).catch(() => { showAlert("Date error", "error"); submitBtn.disabled = false; submitBtn.innerText = '✅ Submit'; });
+                        }
+                    }).catch(e => { errors = true; showAlert("Error: "+e.message, "error"); submitBtn.disabled = false; submitBtn.innerText = '✅ Submit'; });
+                } else { finished++; }
+            });
+        });
+    }
+
+    // Admin functions
+    function addMultipleStudents() {
+        if (!isAdmin) { showAlert("Admin required", "error"); return; }
+        const nameInputs = document.querySelectorAll('.studentName');
+        const rollInputs = document.querySelectorAll('.familyRoll');
+        let firstRoll = rollInputs[0]?.value.trim();
+        if (!firstRoll) { showAlert("Enter family roll", "error"); return; }
+        let rollNum = parseInt(firstRoll);
+        let toAdd = [];
+        nameInputs.forEach((inp, idx) => {
+            let name = inp.value.trim();
+            if (name) {
+                let rollVal = rollInputs[idx]?.value.trim();
+                if (parseInt(rollVal) !== rollNum) { showAlert("Rolls must be same", "error"); return; }
+                toAdd.push(name);
+            }
+        });
+        if (toAdd.length === 0) { showAlert("Add at least one name", "error"); return; }
+        let added = 0;
+        toAdd.forEach(name => {
+            db.ref('students').push().set({ name, roll: rollNum, fajr:0, dhuhr:0, asr:0, maghrib:0, isha:0, created: Date.now() }).then(() => {
+                added++;
+                if (added === toAdd.length) {
+                    showAlert(`✨ ${added} student(s) added to family ${rollNum}`, "success");
+                    nameInputs.forEach(i => i.value = '');
+                    rollInputs.forEach(r => r.value = '');
+                    loadStudents(); loadDatabaseInfo(); loadAllStudents();
+                }
+            }).catch(e => showAlert("Firebase error", "error"));
+        });
+    }
+
+    function resetFamilyNamaz() {
+        if (!isAdmin) return;
+        let roll = document.getElementById('resetRoll').value.trim();
+        if (!roll) { showAlert("Enter family roll", "error"); return; }
+        if (!confirm(`Reset ALL prayer counts for family ${roll}?`)) return;
+        let rollNum = parseInt(roll);
+        db.ref('students').orderByChild('roll').equalTo(rollNum).once('value', snap => {
+            if (!snap.exists()) { showAlert("Family not found", "error"); return; }
+            let updatesDone = 0, totalKids = snap.numChildren();
+            snap.forEach(child => {
+                db.ref('students/' + child.key).update({ fajr:0, dhuhr:0, asr:0, maghrib:0, isha:0 }).then(() => {
+                    updatesDone++;
+                    if (updatesDone === totalKids) { showAlert(`Reset ${totalKids} students`, "success"); loadStudents(); loadAllStudents(); document.getElementById('resetRoll').value = ''; }
+                });
+            });
+        });
+    }
+
+    function changePassword() {
+        if (!isAdmin) return;
+        let cur = document.getElementById('currentPassword').value;
+        let newp = document.getElementById('newPassword').value;
+        let conf = document.getElementById('confirmPassword').value;
+        if (!cur || !newp || !conf) { showAlert("Fill all fields", "error"); return; }
+        if (newp !== conf) { showAlert("Passwords don't match", "error"); return; }
+        db.ref('admin/password').once('value', snap => {
+            let stored = snap.val() || ADMIN_PASS;
+            if (cur !== stored) { showAlert("Current password wrong", "error"); return; }
+            db.ref('admin').set({ password: newp, updated: Date.now() }).then(() => {
+                ADMIN_PASS = newp;
+                showAlert("✅ Password changed", "success");
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+            }).catch(e => showAlert("Error", "error"));
+        });
+    }
+
+    function loadStudents() {
+        if (!isAdmin) return;
+        db.ref('students').once('value', snap => {
+            const container = document.getElementById('studentList');
+            if (!snap.exists()) { container.innerHTML = "<p>No students</p>"; return; }
+            let families = {};
+            snap.forEach(ch => { let s = ch.val(); let r = s.roll || 0; if (!families[r]) families[r] = []; families[r].push({...s, id: ch.key}); });
+            container.innerHTML = '';
+            Object.keys(families).sort((a,b)=>a-b).forEach(roll => {
+                let famDiv = document.createElement('div'); famDiv.className = 'student-group';
+                famDiv.innerHTML = `<h4 style="margin:0 0 10px;">🏠 Family Roll ${roll} (${families[roll].length})</h4>`;
+                families[roll].forEach(s => {
+                    let total = (s.fajr||0)+(s.dhuhr||0)+(s.asr||0)+(s.maghrib||0)+(s.isha||0);
+                    let sub = document.createElement('div'); sub.className = 'student-item';
+                    sub.innerHTML = `<div class="flex-between"><strong>${s.name}</strong><button onclick="deleteStudent('${s.id}','${s.name}')" style="background:#c62828; border:none; border-radius:40px; padding:6px 14px; color:white;">🗑️</button></div>
+                    <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:5px; margin-top:10px;"><span>فجر ${s.fajr||0}</span><span>ظہر ${s.dhuhr||0}</span><span>عصر ${s.asr||0}</span><span>مغرب ${s.maghrib||0}</span><span>عشاء ${s.isha||0}</span></div>
+                    <div style="text-align:center; font-weight:bold;">مجموع: ${total}</div>`;
+                    famDiv.appendChild(sub);
+                });
+                container.appendChild(famDiv);
+            });
+        });
+    }
+
+    window.deleteStudent = function(key, name) {
+        if (!isAdmin) return;
+        if (confirm(`Delete ${name} permanently?`)) { db.ref('students/'+key).remove().then(() => { showAlert(`${name} removed`, "success"); loadStudents(); loadDatabaseInfo(); loadAllStudents(); }); }
+    };
+
+    function loadFamilyReport() {
+        let roll = document.getElementById('reportRoll').value.trim();
+        if (!roll) { showAlert("Enter roll", "error"); return; }
+        let rollNum = parseInt(roll);
+        db.ref('students').orderByChild('roll').equalTo(rollNum).once('value', snap => {
+            let reportDiv = document.getElementById('reportContent');
+            if (!snap.exists()) { reportDiv.innerHTML = '<p style="color:red;">Family not found</p>'; return; }
+            let familyTotal = 0;
+            let html = `<div style="text-align:center;"><h3>📌 Family Roll: ${rollNum}</h3></div>`;
+            snap.forEach(ch => {
+                let s = ch.val();
+                let total = (s.fajr||0)+(s.dhuhr||0)+(s.asr||0)+(s.maghrib||0)+(s.isha||0);
+                familyTotal += total;
+                html += `<div class="student-item"><strong>${s.name}</strong><div class="stats"><div class="stat-box">فجر ${s.fajr||0}</div><div class="stat-box">ظہر ${s.dhuhr||0}</div><div class="stat-box">عصر ${s.asr||0}</div><div class="stat-box">مغرب ${s.maghrib||0}</div><div class="stat-box">عشاء ${s.isha||0}</div></div><div style="text-align:center;">✨ Total: ${total}</div></div>`;
+            });
+            html += `<div style="background:#1e3a2f; color:white; padding:12px; border-radius:60px; text-align:center; margin-top:15px;">🏆 Family Total: ${familyTotal}</div>`;
+            reportDiv.innerHTML = html;
+        });
+    }
+
+    function loadAllStudents() {
+        db.ref('students').once('value', snap => {
+            let tbody = document.getElementById('allStudentsTable');
+            if (!snap.exists()) { tbody.innerHTML = '<tr><td colspan="8">No records</td></tr>'; return; }
+            let rows = [];
+            snap.forEach(ch => {
+                let s = ch.val();
+                if (s.name && s.roll !== undefined) {
+                    let total = (s.fajr||0)+(s.dhuhr||0)+(s.asr||0)+(s.maghrib||0)+(s.isha||0);
+                    rows.push({roll:s.roll, name:s.name, fajr:s.fajr||0, dhuhr:s.dhuhr||0, asr:s.asr||0, maghrib:s.maghrib||0, isha:s.isha||0, total});
+                }
+            });
+            rows.sort((a,b)=> a.roll - b.roll || a.name.localeCompare(b.name));
+            tbody.innerHTML = rows.map(r => `<tr><td>${r.roll}</td><td>${r.name}</td><td>${r.fajr}</td><td>${r.dhuhr}</td><td>${r.asr}</td><td>${r.maghrib}</td><td>${r.isha}</td><td><strong>${r.total}</strong></td></tr>`).join('');
+        });
+    }
+
+    function loadDatabaseInfo() {
+        if (!isAdmin) return;
+        db.ref('students').once('value', snap => {
+            let familiesSet = new Set();
+            let studentCount = 0;
+            snap.forEach(ch => { let s = ch.val(); if(s.name && s.roll) { studentCount++; familiesSet.add(s.roll); } });
+            document.getElementById('totalStudents').innerText = studentCount;
+            document.getElementById('totalFamilies').innerText = familiesSet.size;
+        });
+    }
+
+    document.addEventListener('input', function(e) {
+        if (e.target.classList && e.target.classList.contains('familyRoll')) {
+            let val = e.target.value;
+            document.querySelectorAll('.familyRoll').forEach(inp => inp.value = val);
+        }
+    });
+
+    window.onload = () => {
+        document.getElementById('rollNumber').addEventListener('keypress', e => { if (e.key === 'Enter') loadStudentsByRoll(); });
+        document.getElementById('adminPassword').addEventListener('keypress', e => { if (e.key === 'Enter') login(); });
+        document.getElementById('reportRoll').addEventListener('keypress', e => { if (e.key === 'Enter') loadFamilyReport(); });
+        loadAllStudents();
+    };
+</script>
+</body>
+</html>
