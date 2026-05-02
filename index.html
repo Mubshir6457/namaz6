@@ -3,89 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Descent Book Centre | Premium Inventory</title>
+    <title>Descent Book Centre | Mobile Ready</title>
     <style>
         :root {
             --primary: #6c5ce7;
-            --secondary: #a29bfe;
             --success: #00b894;
             --warning: #ff7675;
             --dark: #2d3436;
-            --light: #f9f9fb;
+            --light: #f1f2f6;
         }
 
         body { 
-            font-family: 'Poppins', sans-serif; 
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            margin: 0; padding: 20px; color: var(--dark);
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            background: #dfe6e9; margin: 0; padding: 10px; 
         }
 
         .container { 
-            max-width: 1100px; margin: auto; background: white; 
-            padding: 30px; border-radius: 20px; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
+            max-width: 100%; margin: auto; background: white; 
+            padding: 15px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); 
         }
 
-        h1 { 
-            text-align: center; color: var(--primary); 
-            font-size: 2.5em; margin-bottom: 10px;
-            text-transform: uppercase; letter-spacing: 2px;
-        }
+        h1 { text-align: center; color: var(--primary); font-size: 1.8rem; margin: 10px 0; }
 
-        /* --- New Item Form Style --- */
+        /* --- New Item Section (Responsive) --- */
         .add-item-box {
-            background: var(--light); padding: 20px;
-            border-radius: 15px; margin-bottom: 30px;
-            display: flex; gap: 15px; align-items: flex-end;
-            border: 2px dashed var(--secondary);
+            background: var(--light); padding: 15px; border-radius: 12px;
+            margin-bottom: 20px; border: 2px solid var(--primary);
         }
-
-        .form-group { display: flex; flex-direction: column; flex: 1; }
-        .form-group label { font-size: 12px; font-weight: bold; margin-bottom: 5px; color: var(--primary); }
-        .form-group input { padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+        .form-row { display: flex; flex-direction: column; gap: 10px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-size: 0.8rem; font-weight: bold; margin-bottom: 4px; }
+        .form-group input { padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; }
 
         /* --- Buttons --- */
+        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .btn { 
-            padding: 12px 25px; border: none; border-radius: 10px; 
-            cursor: pointer; font-weight: bold; transition: 0.3s;
-            display: flex; align-items: center; gap: 8px;
+            padding: 12px; border: none; border-radius: 8px; 
+            font-weight: bold; color: white; cursor: pointer; font-size: 0.9rem;
+            text-align: center;
         }
-        .add-btn { background: var(--primary); color: white; }
-        .save-btn { background: var(--success); color: white; }
-        .refresh-btn { background: var(--secondary); color: white; }
-        .btn:hover { transform: translateY(-2px); opacity: 0.9; }
+        .add-btn { background: var(--primary); width: 100%; margin-top: 10px; }
+        .save-btn { background: var(--success); }
+        .refresh-btn { background: #636e72; }
 
-        /* --- Table Styling --- */
+        /* --- Responsive Table (Card View for Mobile) --- */
         .row-header { 
-            display: grid; grid-template-columns: 2.5fr 1fr 1fr 1fr 1.2fr; 
-            background: var(--primary); color: white;
-            padding: 15px; border-radius: 10px; font-weight: bold;
-            text-align: center; margin-bottom: 10px;
+            display: none; /* Mobile par header chupa dete hain */
         }
+
+        #inventory-list { display: flex; flex-direction: column; gap: 12px; }
 
         .data-row { 
-            display: grid; grid-template-columns: 2.5fr 1fr 1fr 1fr 1.2fr; 
-            background: white; border-radius: 10px;
-            padding: 12px; margin-bottom: 8px;
-            align-items: center; text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-            border-left: 5px solid var(--secondary);
+            background: white; border: 1px solid #eee; border-radius: 12px;
+            padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+            border-left: 6px solid var(--primary);
         }
 
-        input[type="number"] { 
-            width: 70%; padding: 8px; border: 1px solid #eee; 
-            border-radius: 6px; text-align: center; font-weight: bold;
-        }
+        .item-name { grid-column: span 2; font-weight: bold; color: var(--primary); font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        
+        .input-wrap { display: flex; flex-direction: column; gap: 5px; }
+        .input-wrap label { font-size: 0.7rem; color: #666; }
+        .input-wrap input { padding: 10px; border-radius: 6px; border: 1px solid #ddd; font-weight: bold; }
 
-        .avail-badge { 
-            font-weight: bold; padding: 6px 12px; border-radius: 20px; 
-            background: #dfe6e9; display: inline-block;
-        }
-
+        .status-wrap { text-align: center; display: flex; flex-direction: column; justify-content: center; }
+        .avail-badge { font-weight: 800; font-size: 1.2rem; padding: 5px; border-radius: 8px; background: #eee; }
         .low-stock { background: var(--warning); color: white; }
-        .cash-text { color: var(--success); font-weight: 800; font-size: 1.1em; }
+        
+        .cash-wrap { grid-column: span 2; background: #e8f8f5; padding: 8px; border-radius: 8px; text-align: center; font-weight: bold; color: var(--success); }
 
-        .top-actions { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        /* --- Tablet & Desktop View --- */
+        @media (min-width: 768px) {
+            .container { max-width: 900px; padding: 30px; }
+            .form-row { flex-direction: row; align-items: flex-end; }
+            .row-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; background: var(--primary); color: white; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 10px; }
+            .data-row { grid-template-columns: 2fr 1fr 1fr 1fr 1fr; border-left: none; align-items: center; text-align: center; }
+            .item-name { grid-column: span 1; border: none; }
+            .cash-wrap { grid-column: span 1; background: none; }
+            .input-wrap label { display: none; }
+        }
     </style>
 </head>
 <body>
@@ -93,72 +89,77 @@
 <div class="container">
     <h1>Descent Book Centre</h1>
     
-    <!-- Add New Item Section -->
     <div class="add-item-box">
-        <div class="form-group">
-            <label>Item Name (e.g. Register 200)</label>
-            <input type="text" id="newName" placeholder="Enter Item Name...">
+        <div class="form-row">
+            <div class="form-group" style="flex: 2;">
+                <label>Item Name (Price Name mein likhen)</label>
+                <input type="text" id="newName" placeholder="e.g. Register 250">
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label>Opening Stock</label>
+                <input type="number" id="newQty" value="0">
+            </div>
         </div>
-        <div class="form-group">
-            <label>Initial Stock</label>
-            <input type="number" id="newQty" value="0">
-        </div>
-        <button class="btn add-btn" onclick="addNewRow()">➕ Add Item</button>
+        <button class="btn add-btn" onclick="addNewRow()">➕ Add New Item</button>
     </div>
 
-    <div class="top-actions">
-        <button class="btn refresh-btn" onclick="fetchData()">🔄 Refresh List</button>
-        <button class="btn save-btn" onclick="saveData()">💾 Save to Cloud</button>
+    <div class="actions">
+        <button class="btn refresh-btn" onclick="fetchData()">🔄 Sync List</button>
+        <button class="btn save-btn" onclick="saveData()">💾 Save All</button>
     </div>
 
     <div class="row-header">
-        <div style="text-align: left; padding-left: 10px;">Item Details</div>
+        <div style="text-align: left;">Item</div>
         <div>Stock In</div>
         <div>Sold</div>
         <div>Available</div>
-        <div>Sold Cash</div>
+        <div>Cash</div>
     </div>
     
     <div id="inventory-list">
-        <!-- Data dynamically loads here -->
+        <!-- Data Yahan Ayega -->
     </div>
 </div>
 
 <script>
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxeLGiVjq9pcS2_ffIr_4_qfDOVlLJ6bjkSSaSZI4rtFy6u3U7tqOv07ebejhkgnawv/exec';
 
-    // 1. Naya Item List mein shamil karna
     function addNewRow() {
         const name = document.getElementById('newName').value;
         const qty = document.getElementById('newQty').value;
-
-        if(!name) { alert("Pehle Item ka naam likhein!"); return; }
-
+        if(!name) return alert("Naam likhna zaroori hai!");
+        
         const list = document.getElementById('inventory-list');
         const price = parseInt(name.match(/\d+/) || 0);
+        list.insertAdjacentHTML('afterbegin', createRowHTML(name, qty, 0, qty, 0, price));
         
-        const row = createRowHTML(name, qty, 0, qty, 0, price);
-        list.insertAdjacentHTML('afterbegin', row);
-        
-        // Clear inputs
         document.getElementById('newName').value = '';
         document.getElementById('newQty').value = '0';
     }
 
-    // 2. Row Banane ka function
     function createRowHTML(name, qty, sold, avail, value, price) {
         return `
             <div class="data-row">
-                <div style="text-align:left; font-weight:bold; color:var(--primary);">${name}</div>
-                <div><input type="number" value="${qty}" oninput="updateRow(this, ${price})" class="qty-in"></div>
-                <div><input type="number" value="${sold}" oninput="updateRow(this, ${price})" class="sold-in"></div>
-                <div><span class="avail-badge ${avail < 5 ? 'low-stock' : ''}">${avail}</span></div>
-                <div class="cash-text">Rs. <span class="val-text">${value}</span></div>
+                <div class="item-name">${name}</div>
+                <div class="input-wrap">
+                    <label>STOCK IN</label>
+                    <input type="number" value="${qty}" oninput="updateRow(this, ${price})" class="qty-in">
+                </div>
+                <div class="input-wrap">
+                    <label>SOLD</label>
+                    <input type="number" value="${sold}" oninput="updateRow(this, ${price})" class="sold-in">
+                </div>
+                <div class="status-wrap">
+                    <label style="font-size:0.6rem; margin-bottom:2px;">AVAILABLE</label>
+                    <div class="avail-badge ${avail < 5 ? 'low-stock' : ''}">${avail}</div>
+                </div>
+                <div class="cash-wrap">
+                    Sold Cash: Rs. <span class="val-text">${value}</span>
+                </div>
             </div>
         `;
     }
 
-    // 3. Sheet se data lana
     async function fetchData() {
         try {
             const response = await fetch(scriptURL);
@@ -170,15 +171,13 @@
                 const price = parseInt(name.match(/\d+/) || 0);
                 list.innerHTML += createRowHTML(name, qty, sold, avail, value, price);
             }
-        } catch (e) { alert("Data load nahi ho saka!"); }
+        } catch (e) { console.log(e); }
     }
 
-    // 4. Auto Calculation
     function updateRow(input, price) {
         const row = input.closest('.data-row');
         const qty = parseInt(row.querySelector('.qty-in').value) || 0;
         const sold = parseInt(row.querySelector('.sold-in').value) || 0;
-        
         const avail = qty - sold;
         const cash = sold * price;
 
@@ -190,25 +189,22 @@
         else badge.classList.remove('low-stock');
     }
 
-    // 5. Google Sheet mein save karna
     async function saveData() {
         const rows = document.querySelectorAll('.data-row');
         let dataToSave = [["Item Name", "Quantity", "Sold", "Available", "Value"]];
-
         rows.forEach(row => {
             dataToSave.push([
-                row.children[0].innerText,
+                row.querySelector('.item-name').innerText,
                 parseInt(row.querySelector('.qty-in').value) || 0,
                 parseInt(row.querySelector('.sold-in').value) || 0,
                 parseInt(row.querySelector('.avail-badge').innerText) || 0,
                 parseInt(row.querySelector('.val-text').innerText) || 0
             ]);
         });
-
         try {
             await fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(dataToSave) });
-            alert("Mubarak ho! Sab kuch Google Sheet mein save ho gaya.");
-        } catch (e) { alert("Save Error!"); }
+            alert("Data Saved Successfully!");
+        } catch (e) { alert("Error!"); }
     }
 
     window.onload = fetchData;
