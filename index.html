@@ -1,606 +1,218 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Al-Mizan | Premium Namaz Tracker</title>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-    <!-- Font Awesome Icons (VIP Style) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descent Book Centre | Premium Inventory</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --success: #00b894;
+            --warning: #ff7675;
+            --dark: #2d3436;
+            --light: #f9f9fb;
         }
 
-        body {
-            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', 'Poppins', sans-serif;
-            background: radial-gradient(circle at 10% 30%, #e8f0e4, #d4e2d0);
-            padding: 16px;
-            min-height: 100vh;
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            margin: 0; padding: 20px; color: var(--dark);
         }
 
-        /* premium glassmorphism effect */
-        .page {
-            display: none;
-            background: rgba(255, 255, 255, 0.96);
-            backdrop-filter: blur(0px);
-            padding: 20px 18px;
-            border-radius: 42px;
-            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255,255,255,0.6) inset;
-            max-width: 600px;
-            margin: 0 auto;
-            transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        .container { 
+            max-width: 1100px; margin: auto; background: white; 
+            padding: 30px; border-radius: 20px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
         }
 
-        .active {
-            display: block;
-            animation: fadeSlideUp 0.3s ease-out;
+        h1 { 
+            text-align: center; color: var(--primary); 
+            font-size: 2.5em; margin-bottom: 10px;
+            text-transform: uppercase; letter-spacing: 2px;
         }
 
-        @keyframes fadeSlideUp {
-            from { opacity: 0; transform: translateY(12px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* --- New Item Form Style --- */
+        .add-item-box {
+            background: var(--light); padding: 20px;
+            border-radius: 15px; margin-bottom: 30px;
+            display: flex; gap: 15px; align-items: flex-end;
+            border: 2px dashed var(--secondary);
         }
 
-        /* floating admin crown */
-        .admin-btn {
-            position: fixed;
-            top: 16px;
-            left: 16px;
-            z-index: 1200;
+        .form-group { display: flex; flex-direction: column; flex: 1; }
+        .form-group label { font-size: 12px; font-weight: bold; margin-bottom: 5px; color: var(--primary); }
+        .form-group input { padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+
+        /* --- Buttons --- */
+        .btn { 
+            padding: 12px 25px; border: none; border-radius: 10px; 
+            cursor: pointer; font-weight: bold; transition: 0.3s;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .add-btn { background: var(--primary); color: white; }
+        .save-btn { background: var(--success); color: white; }
+        .refresh-btn { background: var(--secondary); color: white; }
+        .btn:hover { transform: translateY(-2px); opacity: 0.9; }
+
+        /* --- Table Styling --- */
+        .row-header { 
+            display: grid; grid-template-columns: 2.5fr 1fr 1fr 1fr 1.2fr; 
+            background: var(--primary); color: white;
+            padding: 15px; border-radius: 10px; font-weight: bold;
+            text-align: center; margin-bottom: 10px;
         }
 
-        .admin-btn button {
-            background: rgba(30, 58, 47, 0.85);
-            backdrop-filter: blur(8px);
-            color: #FFE6C7;
-            border: 1px solid rgba(255,215,150,0.4);
-            padding: 10px 20px;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 14px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-            cursor: pointer;
-            transition: 0.2s;
+        .data-row { 
+            display: grid; grid-template-columns: 2.5fr 1fr 1fr 1fr 1.2fr; 
+            background: white; border-radius: 10px;
+            padding: 12px; margin-bottom: 8px;
+            align-items: center; text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            border-left: 5px solid var(--secondary);
         }
 
-        .admin-btn button:active { transform: scale(0.96); background: #1e3a2f; }
-
-        /* premium menu */
-        .mobile-menu {
-            display: flex;
-            justify-content: space-between;
-            background: #1a2f25;
-            padding: 8px 12px;
-            border-radius: 80px;
-            margin-bottom: 24px;
-            gap: 6px;
-            box-shadow: 0 6px 14px rgba(0,0,0,0.1);
+        input[type="number"] { 
+            width: 70%; padding: 8px; border: 1px solid #eee; 
+            border-radius: 6px; text-align: center; font-weight: bold;
         }
 
-        .mobile-menu button {
-            background: #2b5e3b;
-            color: white;
-            border: none;
-            padding: 12px 0;
-            border-radius: 60px;
-            font-size: 13px;
-            font-weight: 600;
-            flex: 1;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            font-family: inherit;
+        .avail-badge { 
+            font-weight: bold; padding: 6px 12px; border-radius: 20px; 
+            background: #dfe6e9; display: inline-block;
         }
 
-        .mobile-menu button i { font-size: 14px; }
-        .mobile-menu button:active { background: #0f3b22; transform: scale(0.96); }
+        .low-stock { background: var(--warning); color: white; }
+        .cash-text { color: var(--success); font-weight: 800; font-size: 1.1em; }
 
-        .header {
-            background: linear-gradient(125deg, #1e3a2f 0%, #256f38 100%);
-            color: white;
-            padding: 24px 18px;
-            border-radius: 38px;
-            margin-bottom: 24px;
-            text-align: center;
-            box-shadow: 0 10px 20px -5px rgba(0,0,0,0.2);
-        }
-
-        .header h1 { font-size: 1.9rem; letter-spacing: -0.5px; font-weight: 700; }
-        .header p { font-size: 0.85rem; opacity: 0.9; margin-top: 6px; }
-
-        .card {
-            background: white;
-            padding: 20px 18px;
-            border-radius: 34px;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.03);
-            margin-bottom: 22px;
-            border: 1px solid #eef5ea;
-            transition: 0.2s;
-        }
-
-        .card h3 {
-            color: #1e3a2f;
-            border-left: 6px solid #f5b042;
-            padding-left: 16px;
-            margin-bottom: 18px;
-            font-size: 1.35rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        input, .btn {
-            border-radius: 60px;
-            font-size: 16px;
-        }
-
-        input {
-            padding: 14px 20px;
-            border: 1.5px solid #d0e6ca;
-            background: #fefdf8;
-            width: 100%;
-            transition: 0.2s;
-            font-weight: 500;
-        }
-
-        input:focus {
-            border-color: #f5b042;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(245,176,66,0.2);
-        }
-
-        .btn {
-            padding: 12px 18px;
-            border: none;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.2s;
-            font-size: 15px;
-        }
-        .btn-primary { background: #1e6f3f; color: white; box-shadow: 0 2px 6px rgba(0,0,0,0.1);}
-        .btn-success { background: #f5b042; color: #2c2c2c; box-shadow: 0 2px 8px rgba(245,176,66,0.3);}
-        .btn-danger { background: #c0392b; color: white; }
-        .submit-all-btn {
-            background: linear-gradient(95deg, #f5b042, #e67e22);
-            color: white;
-            padding: 16px;
-            font-size: 1rem;
-            width: 100%;
-            border-radius: 60px;
-            font-weight: bold;
-            border: none;
-            transition: 0.2s;
-            box-shadow: 0 10px 18px -8px rgba(230,126,34,0.4);
-        }
-        .student-namaz-container {
-            background: #fefcf5;
-            padding: 16px;
-            border-radius: 32px;
-            margin: 18px 0;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-            border: 1px solid #e8f0e0;
-        }
-        .student-name-header {
-            background: #2c5e3f;
-            color: #FFE4B5;
-            padding: 12px;
-            border-radius: 60px;
-            margin-bottom: 16px;
-            text-align: center;
-            font-weight: 800;
-            font-size: 1.1rem;
-        }
-        .namaz-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 8px;
-            border-bottom: 1px solid #efe7d5;
-        }
-        .namaz-label { font-weight: 700; color: #2c3e2b; display: flex; align-items: center; gap: 8px; font-size: 1rem; }
-        .namaz-checkbox { transform: scale(1.45); width: 22px; height: 22px; accent-color: #f5b042; cursor: pointer; }
-
-        .stats { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
-        .stat-box { background: #faf3e0; padding: 8px 12px; border-radius: 40px; font-weight: 600; font-size: 0.85rem; }
-
-        .student-item { background: #fdf9ef; padding: 14px; border-radius: 28px; margin: 12px 0; border-left: 8px solid #f5b042; }
-
-        .alert {
-            padding: 12px 18px;
-            border-radius: 60px;
-            margin: 12px 0;
-            font-weight: 500;
-            backdrop-filter: blur(8px);
-        }
-        .success { background: #d9f0da; color: #1f5420; border-left: 5px solid #2e7d32;}
-        .error { background: #ffe6e5; color: #b71c1c; border-left: 5px solid #c62828;}
-        .warning { background: #fff0dd; color: #c45c00; border-left: 5px solid #f5b042;}
-
-        .daily-limit-badge {
-            background: #ffecb3;
-            color: #b45f06;
-            padding: 12px;
-            border-radius: 60px;
-            font-weight: bold;
-            text-align: center;
-            margin: 12px 0;
-        }
-
-        .info-message { background: #e8f0fe; padding: 12px; border-radius: 28px; text-align: center; font-size: 0.8rem; color: #1f4f2d;}
-
-        .flex-between { display: flex; justify-content: space-between; align-items: center; }
-
-        #alertBox {
-            position: fixed;
-            bottom: 24px;
-            left: 16px;
-            right: 16px;
-            z-index: 1300;
-            max-width: 480px;
-            margin: 0 auto;
-            pointer-events: none;
-        }
-        .alert { pointer-events: auto; box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
-
-        table { width: 100%; border-collapse: collapse; border-radius: 28px; overflow: hidden; font-size: 0.8rem;}
-        th, td { padding: 12px 4px; border-bottom: 1px solid #e2e8d5; text-align: center; }
-        th { background: #1e3a2f; color: #ffefcf; font-weight: 700; }
-
-        .reset-all-btn {
-            background: #a5261c;
-            color: white;
-            margin-top: 12px;
-            transition: 0.2s;
-        }
-        .reset-all-btn:active { transform: scale(0.97);}
-        @media (max-width: 550px) { body { padding: 10px; } .namaz-label { font-size: 0.85rem; } }
+        .top-actions { display: flex; justify-content: space-between; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
-<div class="admin-btn">
-    <button onclick="showAdminLogin()"><i class="fas fa-crown"></i> Admin Portal</button>
-</div>
-
-<!-- Parent UI -->
-<div id="parentPage" class="page active">
-    <div class="header">
-        <h1><i class="fas fa-mosque"></i> Namaz Tracker</h1>
-        <p>Record daily prayers | Auto-reset every 24h</p>
-    </div>
-    <div class="card">
-        <h3><i class="fas fa-users"></i> Family Roll</h3>
-        <div style="text-align:center;">
-            <input type="number" id="rollNumber" placeholder="Enter family roll number" style="text-align:center; font-size:18px;">
-            <button class="btn btn-success" onclick="loadStudentsByRoll()" style="margin-top:12px; width:100%;"><i class="fas fa-search"></i> Load Family</button>
+<div class="container">
+    <h1>Descent Book Centre</h1>
+    
+    <!-- Add New Item Section -->
+    <div class="add-item-box">
+        <div class="form-group">
+            <label>Item Name (e.g. Register 200)</label>
+            <input type="text" id="newName" placeholder="Enter Item Name...">
         </div>
-        <div id="familyInfo" style="display:none; margin-top:20px;">
-            <div style="background:#f5efe2; padding:12px; border-radius:60px; text-align:center;">
-                <h3 style="margin:0;">🏠 Roll: <span id="familyRoll"></span></h3>
-                <p><i class="fas fa-child"></i> <span id="studentCount"></span> students</p>
-            </div>
-            <div id="dailyLimitMsg" class="daily-limit-badge" style="display:none;"></div>
-            <div id="studentsNamazContainer"></div>
-            <button class="submit-all-btn" id="submitBtn" onclick="submitAllNamaz()"><i class="fas fa-check-circle"></i> Submit Today's Prayers</button>
+        <div class="form-group">
+            <label>Initial Stock</label>
+            <input type="number" id="newQty" value="0">
         </div>
+        <button class="btn add-btn" onclick="addNewRow()">➕ Add Item</button>
     </div>
-</div>
 
-<!-- Admin Login -->
-<div id="loginPage" class="page">
-    <div class="card" style="text-align:center;">
-        <i class="fas fa-lock" style="font-size: 48px; color:#2e7d32;"></i>
-        <h2 style="color:#1e3a2f;">Admin Access</h2>
-        <input type="password" id="adminPassword" placeholder="Enter master password">
-        <button class="btn btn-success btn-block" onclick="login()" style="width:100%; margin-top:12px;">Unlock</button>
-        <button class="btn btn-primary btn-block" onclick="showParentPage()" style="margin-top:10px;">← Back to Tracker</button>
+    <div class="top-actions">
+        <button class="btn refresh-btn" onclick="fetchData()">🔄 Refresh List</button>
+        <button class="btn save-btn" onclick="saveData()">💾 Save to Cloud</button>
     </div>
-</div>
 
-<!-- Admin Navbar -->
-<div class="mobile-menu" id="navBar" style="display:none;">
-    <button onclick="showPage('adminPage')"><i class="fas fa-tachometer-alt"></i> Admin</button>
-    <button onclick="showPage('reportPage')"><i class="fas fa-chart-line"></i> Report</button>
-    <button onclick="showPage('sheetPage')"><i class="fas fa-table"></i> Sheet</button>
-    <button onclick="showPage('settingsPage')"><i class="fas fa-sliders-h"></i> Settings</button>
-    <button onclick="logout()" style="background:#a5261c;"><i class="fas fa-sign-out-alt"></i> Exit</button>
-</div>
-
-<!-- Admin Dashboard -->
-<div id="adminPage" class="page">
-    <div class="header"><h1><i class="fas fa-user-shield"></i> Supreme Panel</h1><p>Manage families, students & global reset</p></div>
-    <div class="card">
-        <h3><i class="fas fa-plus-circle"></i> Add Students (same roll)</h3>
-        <div id="studentForms">
-            <div class="form-row" style="display:flex; gap:10px; margin-bottom:12px;"><input type="text" placeholder="Student 1 Name" class="studentName"><input type="number" placeholder="Roll" class="familyRoll"></div>
-            <div class="form-row" style="display:flex; gap:10px; margin-bottom:12px;"><input type="text" placeholder="Student 2 Name" class="studentName"><input type="number" placeholder="Roll" class="familyRoll"></div>
-            <div class="form-row" style="display:flex; gap:10px; margin-bottom:12px;"><input type="text" placeholder="Student 3 Name" class="studentName"><input type="number" placeholder="Roll" class="familyRoll"></div>
-            <div class="form-row" style="display:flex; gap:10px; margin-bottom:12px;"><input type="text" placeholder="Student 4 Name" class="studentName"><input type="number" placeholder="Roll" class="familyRoll"></div>
-        </div>
-        <button class="btn btn-success" onclick="addMultipleStudents()" style="width:100%;"><i class="fas fa-save"></i> Register Students</button>
+    <div class="row-header">
+        <div style="text-align: left; padding-left: 10px;">Item Details</div>
+        <div>Stock In</div>
+        <div>Sold</div>
+        <div>Available</div>
+        <div>Sold Cash</div>
     </div>
-    <div class="card">
-        <h3><i class="fas fa-undo-alt"></i> Reset Family Counters</h3>
-        <input type="number" id="resetRoll" placeholder="Family Roll number">
-        <button class="btn btn-danger" onclick="resetFamilyNamaz()" style="width:100%; margin-top:8px;"><i class="fas fa-trash-alt"></i> Reset Family</button>
-    </div>
-    <div class="card">
-        <h3><i class="fas fa-globe-asia"></i> GLOBAL RESET (ALL STUDENTS)</h3>
-        <button class="btn reset-all-btn" onclick="globalResetAllNamaz()" style="width:100%; background:#b91c1c;"><i class="fas fa-database"></i> 🔥 Reset ALL Namaz Counters</button>
-        <p style="font-size:12px; margin-top:10px; color:#777;">⚠️ This will set every student's Fajr, Dhuhr, Asr, Maghrib, Isha to ZERO.</p>
-    </div>
-    <div class="card">
-        <h3><i class="fas fa-list-ul"></i> Registered Students</h3>
-        <div id="studentList">Loading...</div>
+    
+    <div id="inventory-list">
+        <!-- Data dynamically loads here -->
     </div>
 </div>
-
-<!-- Settings -->
-<div id="settingsPage" class="page">
-    <div class="header"><h1><i class="fas fa-cog"></i> Settings</h1></div>
-    <div class="card">
-        <h3>🔐 Update Admin Password</h3>
-        <input type="password" id="currentPassword" placeholder="Current Password">
-        <input type="password" id="newPassword" placeholder="New Password">
-        <input type="password" id="confirmPassword" placeholder="Confirm Password">
-        <button class="btn btn-success" onclick="changePassword()" style="width:100%;">Change Password</button>
-    </div>
-    <div class="card">
-        <h3>📊 Database Health</h3>
-        <p><i class="fas fa-users"></i> Total Students: <strong id="totalStudents">0</strong></p>
-        <p><i class="fas fa-home"></i> Families: <strong id="totalFamilies">0</strong></p>
-        <p><i class="fas fa-clock"></i> Auto-reset: Every 00:00 (midnight) UTC+5</p>
-    </div>
-</div>
-
-<!-- Report -->
-<div id="reportPage" class="page">
-    <div class="header"><h1><i class="fas fa-chart-simple"></i> Family Performance</h1></div>
-    <div class="card">
-        <input type="number" id="reportRoll" placeholder="Family Roll Number">
-        <button class="btn btn-primary" onclick="loadFamilyReport()" style="width:100%;">Generate Report</button>
-        <div id="reportContent" style="margin-top:20px;"></div>
-    </div>
-</div>
-
-<!-- All Students Sheet -->
-<div id="sheetPage" class="page">
-    <div class="header"><h1><i class="fas fa-scroll"></i> Complete Record</h1><p>All students & lifetime counts</p></div>
-    <div class="card" style="overflow-x:auto; padding: 8px;">
-        <table>
-            <thead><tr><th>Roll</th><th>Name</th><th>فجر</th><th>ظہر</th><th>عصر</th><th>مغرب</th><th>عشاء</th><th>Total</th></tr></thead>
-            <tbody id="allStudentsTable"></tbody>
-        </table>
-    </div>
-</div>
-<div id="alertBox"></div>
 
 <script>
-    // Firebase config
-    const firebaseConfig = {
-        apiKey: "AIzaSyCCsoRgqRrQQvDiSC2Xd07sHN4SXjDSl9c",
-        authDomain: "namaz-3d5e2.firebaseapp.com",
-        databaseURL: "https://namaz-3d5e2-default-rtdb.firebaseio.com",
-        projectId: "namaz-3d5e2",
-        storageBucket: "namaz-3d5e2.firebasestorage.app",
-        messagingSenderId: "502360038002",
-        appId: "1:502360038002:web:34a3aa320f69772261c0eb"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    let ADMIN_PASS = "8025";
-    let currentFamilyRoll = null;
-    let studentsData = {};
-    let isAdmin = false;
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxeLGiVjq9pcS2_ffIr_4_qfDOVlLJ6bjkSSaSZI4rtFy6u3U7tqOv07ebejhkgnawv/exec';
 
-    // Helper UI
-    function showAlert(msg, type) {
-        const box = document.getElementById('alertBox');
-        const icon = type === 'success' ? '✅' : (type === 'warning' ? '⚠️' : '❌');
-        box.innerHTML = `<div class="alert ${type}" style="background:${type === 'success' ? '#daf4da' : (type === 'warning' ? '#fff1df' : '#ffe6e5')}">${icon} ${msg}</div>`;
-        setTimeout(() => box.innerHTML = '', 3300);
+    // 1. Naya Item List mein shamil karna
+    function addNewRow() {
+        const name = document.getElementById('newName').value;
+        const qty = document.getElementById('newQty').value;
+
+        if(!name) { alert("Pehle Item ka naam likhein!"); return; }
+
+        const list = document.getElementById('inventory-list');
+        const price = parseInt(name.match(/\d+/) || 0);
+        
+        const row = createRowHTML(name, qty, 0, qty, 0, price);
+        list.insertAdjacentHTML('afterbegin', row);
+        
+        // Clear inputs
+        document.getElementById('newName').value = '';
+        document.getElementById('newQty').value = '0';
     }
 
-    function showPage(pageId) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(pageId).classList.add('active');
-        if (pageId === 'adminPage' && isAdmin) { loadStudents(); loadDatabaseInfo(); }
-        if (pageId === 'sheetPage') loadAllStudents();
-        if (pageId === 'reportPage') document.getElementById('reportContent').innerHTML = '<p style="text-align:center;">🔍 Enter roll number to view report</p>';
+    // 2. Row Banane ka function
+    function createRowHTML(name, qty, sold, avail, value, price) {
+        return `
+            <div class="data-row">
+                <div style="text-align:left; font-weight:bold; color:var(--primary);">${name}</div>
+                <div><input type="number" value="${qty}" oninput="updateRow(this, ${price})" class="qty-in"></div>
+                <div><input type="number" value="${sold}" oninput="updateRow(this, ${price})" class="sold-in"></div>
+                <div><span class="avail-badge ${avail < 5 ? 'low-stock' : ''}">${avail}</span></div>
+                <div class="cash-text">Rs. <span class="val-text">${value}</span></div>
+            </div>
+        `;
     }
 
-    function showAdminLogin() { showPage('loginPage'); document.getElementById('adminPassword').focus(); }
-    function showParentPage() { showPage('parentPage'); document.getElementById('navBar').style.display = 'none'; isAdmin = false; currentFamilyRoll = null; studentsData = {}; }
-
-    async function login() {
-        const entered = document.getElementById('adminPassword').value;
-        const snap = await db.ref('admin/password').once('value');
-        const storedPass = snap.val();
-        if (entered === (storedPass || ADMIN_PASS)) {
-            isAdmin = true;
-            document.getElementById('navBar').style.display = 'flex';
-            showPage('adminPage');
-            loadStudents();
-            loadDatabaseInfo();
-            showAlert("Admin access granted", "success");
-        } else { showAlert("Invalid password", "error"); }
-        document.getElementById('adminPassword').value = '';
-    }
-    function logout() { isAdmin = false; document.getElementById('navBar').style.display = 'none'; showPage('parentPage'); currentFamilyRoll = null; studentsData = {}; }
-
-    // DAILY RESET LOGIC: checks midnight timestamp and auto reset if new day
-    async function enforceDailyResetIfNeeded() {
-        const todayStr = new Date().toISOString().split('T')[0];
-        const lastResetSnap = await db.ref('system/lastDailyReset').once('value');
-        const lastResetDate = lastResetSnap.val();
-        if (lastResetDate !== todayStr) {
-            // perform full reset of ALL prayer counters (keep student names & rolls)
-            const studentsSnap = await db.ref('students').once('value');
-            if (studentsSnap.exists()) {
-                const updates = {};
-                studentsSnap.forEach(child => {
-                    updates[`students/${child.key}/fajr`] = 0;
-                    updates[`students/${child.key}/dhuhr`] = 0;
-                    updates[`students/${child.key}/asr`] = 0;
-                    updates[`students/${child.key}/maghrib`] = 0;
-                    updates[`students/${child.key}/isha`] = 0;
-                });
-                await db.ref().update(updates);
-                await db.ref('system/lastDailyReset').set(todayStr);
-                // also clear daily submission locks for all families (so new day can submit)
-                await db.ref('dailySubmissions').remove();
-                showAlert("🕋 Auto daily reset completed! All counters refreshed.", "success");
-            } else {
-                await db.ref('system/lastDailyReset').set(todayStr);
+    // 3. Sheet se data lana
+    async function fetchData() {
+        try {
+            const response = await fetch(scriptURL);
+            const data = await response.json();
+            const list = document.getElementById('inventory-list');
+            list.innerHTML = '';
+            for (let i = 1; i < data.length; i++) {
+                const [name, qty, sold, avail, value] = data[i];
+                const price = parseInt(name.match(/\d+/) || 0);
+                list.innerHTML += createRowHTML(name, qty, sold, avail, value, price);
             }
-        }
+        } catch (e) { alert("Data load nahi ho saka!"); }
     }
 
-    async function checkDailySubmissionLimit(familyRoll) {
-        const today = new Date().toISOString().split('T')[0];
-        const snap = await db.ref(`dailySubmissions/${familyRoll}`).once('value');
-        const lastDate = snap.val();
-        if (lastDate === today) return { allowed: false, message: `⏳ Already recorded today (${today}). Limit resets at midnight.` };
-        return { allowed: true };
+    // 4. Auto Calculation
+    function updateRow(input, price) {
+        const row = input.closest('.data-row');
+        const qty = parseInt(row.querySelector('.qty-in').value) || 0;
+        const sold = parseInt(row.querySelector('.sold-in').value) || 0;
+        
+        const avail = qty - sold;
+        const cash = sold * price;
+
+        const badge = row.querySelector('.avail-badge');
+        badge.innerText = avail;
+        row.querySelector('.val-text').innerText = cash;
+
+        if(avail < 5) badge.classList.add('low-stock');
+        else badge.classList.remove('low-stock');
     }
 
-    async function updateLastSubmissionDate(familyRoll) {
-        const today = new Date().toISOString().split('T')[0];
-        await db.ref(`dailySubmissions/${familyRoll}`).set(today);
-    }
+    // 5. Google Sheet mein save karna
+    async function saveData() {
+        const rows = document.querySelectorAll('.data-row');
+        let dataToSave = [["Item Name", "Quantity", "Sold", "Available", "Value"]];
 
-    async function loadStudentsByRoll() {
-        await enforceDailyResetIfNeeded(); // auto reset if new day
-        const rollVal = document.getElementById('rollNumber').value.trim();
-        if (!rollVal) { showAlert("Enter family roll", "error"); return; }
-        const rollNum = parseInt(rollVal);
-        const limitCheck = await checkDailySubmissionLimit(rollNum);
-        db.ref('students').orderByChild('roll').equalTo(rollNum).once('value', snap => {
-            if (!snap.exists()) { showAlert("Family not registered", "error"); return; }
-            document.getElementById('familyRoll').innerText = rollNum;
-            const container = document.getElementById('studentsNamazContainer');
-            container.innerHTML = '';
-            studentsData = {};
-            let count = 0;
-            snap.forEach(child => {
-                const student = child.val();
-                const id = child.key;
-                count++;
-                studentsData[id] = { name: student.name, roll: student.roll };
-                const div = document.createElement('div');
-                div.className = 'student-namaz-container';
-                div.innerHTML = `
-                    <div class="student-name-header"><i class="fas fa-star-of-life"></i> ${student.name}</div>
-                    <div class="namaz-row"><span class="namaz-label"><i class="fas fa-sun"></i> فجر (Fajr)</span><input type="checkbox" class="namaz-checkbox" id="${id}_fajr" ${!limitCheck.allowed ? 'disabled' : ''}></div>
-                    <div class="namaz-row"><span class="namaz-label"><i class="fas fa-cloud-sun"></i> ظہر (Dhuhr)</span><input type="checkbox" class="namaz-checkbox" id="${id}_dhuhr" ${!limitCheck.allowed ? 'disabled' : ''}></div>
-                    <div class="namaz-row"><span class="namaz-label"><i class="fas fa-tree"></i> عصر (Asr)</span><input type="checkbox" class="namaz-checkbox" id="${id}_asr" ${!limitCheck.allowed ? 'disabled' : ''}></div>
-                    <div class="namaz-row"><span class="namaz-label"><i class="fas fa-moon"></i> مغرب (Maghrib)</span><input type="checkbox" class="namaz-checkbox" id="${id}_maghrib" ${!limitCheck.allowed ? 'disabled' : ''}></div>
-                    <div class="namaz-row"><span class="namaz-label"><i class="fas fa-star-and-crescent"></i> عشاء (Isha)</span><input type="checkbox" class="namaz-checkbox" id="${id}_isha" ${!limitCheck.allowed ? 'disabled' : ''}></div>
-                `;
-                container.appendChild(div);
-            });
-            document.getElementById('studentCount').innerText = count;
-            const dailyMsgDiv = document.getElementById('dailyLimitMsg');
-            const submitBtn = document.getElementById('submitBtn');
-            if (!limitCheck.allowed) {
-                dailyMsgDiv.style.display = 'block';
-                dailyMsgDiv.innerHTML = `<i class="fas fa-ban"></i> ${limitCheck.message}`;
-                submitBtn.disabled = true;
-                submitBtn.style.opacity = '0.6';
-            } else {
-                dailyMsgDiv.style.display = 'none';
-                submitBtn.disabled = false;
-                submitBtn.style.opacity = '1';
-            }
-            document.getElementById('familyInfo').style.display = 'block';
-            currentFamilyRoll = rollNum;
-            showAlert(`📖 ${count} student(s) loaded`, "success");
+        rows.forEach(row => {
+            dataToSave.push([
+                row.children[0].innerText,
+                parseInt(row.querySelector('.qty-in').value) || 0,
+                parseInt(row.querySelector('.sold-in').value) || 0,
+                parseInt(row.querySelector('.avail-badge').innerText) || 0,
+                parseInt(row.querySelector('.val-text').innerText) || 0
+            ]);
         });
+
+        try {
+            await fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(dataToSave) });
+            alert("Mubarak ho! Sab kuch Google Sheet mein save ho gaya.");
+        } catch (e) { alert("Save Error!"); }
     }
 
-    async function submitAllNamaz() {
-        if (!currentFamilyRoll || Object.keys(studentsData).length === 0) { showAlert("Load family first", "error"); return; }
-        const limitCheck = await checkDailySubmissionLimit(currentFamilyRoll);
-        if (!limitCheck.allowed) { showAlert(limitCheck.message, 'warning'); loadStudentsByRoll(); return; }
-        let updatesQueue = [];
-        Object.keys(studentsData).forEach(sid => {
-            let selected = [];
-            ['fajr','dhuhr','asr','maghrib','isha'].forEach(p => {
-                const cb = document.getElementById(`${sid}_${p}`);
-                if (cb && cb.checked) selected.push(p);
-            });
-            if (selected.length) updatesQueue.push({ id: sid, prayers: selected });
-        });
-        if (updatesQueue.length === 0) { showAlert("Select at least one prayer", "error"); return; }
-        const submitBtn = document.getElementById('submitBtn');
-        submitBtn.disabled = true;
-        submitBtn.innerText = '⏳ Submitting...';
-        let finished = 0, errors = false;
-        updatesQueue.forEach(item => {
-            db.ref('students/' + item.id).once('value', snap => {
-                if (snap.exists()) {
-                    const curr = snap.val();
-                    const updateObj = {};
-                    item.prayers.forEach(p => { updateObj[p] = (curr[p] || 0) + 1; });
-                    updateObj.lastUpdated = new Date().toISOString();
-                    db.ref('students/' + item.id).update(updateObj).then(() => {
-                        item.prayers.forEach(p => { const cb = document.getElementById(`${item.id}_${p}`); if (cb) cb.checked = false; });
-                        finished++;
-                        if (finished === updatesQueue.length && !errors) {
-                            updateLastSubmissionDate(currentFamilyRoll).then(() => {
-                                showAlert(`✅ ${updatesQueue.length} student(s) updated!`, "success");
-                                setTimeout(() => { document.getElementById('familyInfo').style.display = 'none'; currentFamilyRoll = null; studentsData = {}; }, 1500);
-                                loadAllStudents();
-                                if (isAdmin) loadStudents();
-                                submitBtn.disabled = false;
-                                submitBtn.innerText = '✅ Submit Today\'s Prayers';
-                            });
-                        }
-                    }).catch(e => { errors = true; showAlert("Error", "error"); submitBtn.disabled = false; submitBtn.innerText = '✅ Submit'; });
-                } else { finished++; }
-            });
-        });
-    }
-
-    // Admin: GLOBAL RESET ALL NAMAZ COUNTERS
-    window.globalResetAllNamaz = async function() {
-        if (!isAdmin) { showAlert("Admin required", "error"); return; }
-        if (!confirm("⚠️ DANGER: Reset ALL students' prayer counts (Fajr, Dhuhr, Asr, Maghrib, Isha) to ZERO? This action is permanent.")) return;
-        const studentsSnap = await db.ref('students').once('value');
-        if (!studentsSnap.exists()) { showAlert("No students", "error"); return; }
-        const updates = {};
-        studentsSnap.forEach(child => {
-            updates[`students/${child.key}/fajr`] = 0;
-            updates[`students/${child.key}/dhuhr`] = 0;
-            updates[`students/${child.key}/asr`] = 0;
-            updates[`students/${child.key}/maghrib`] = 0;
-            updates[`students/${child.key}/isha`] = 0;
-        });
-        await db.ref().update(updates);
-        showAlert("🌙 Global reset completed: All namaz counters set to 0", "success");
-        loadStudents(); loadAllStudents();
-    };
-
-    window.resetFamilyNamaz = function() { if(!isAdmin) return; let roll=document.getElementById('resetRoll').value.trim(); if(!roll){showAlert("Enter roll","error");return;} let rollNum=parseInt(roll); db.ref('students').orderByChild('roll').equalTo(rollNum).once('value', snap=>{ if(!snap.exists()){showAlert("Not found","error");return;} let cnt=0, total=snap.numChildren(); snap.forEach(ch=>{ db.ref('students/'+ch.key).update({fajr:0,dhuhr:0,asr:0,maghrib:0,isha:0}).then(()=>{cnt++; if(cnt===total){showAlert(`Reset family ${rollNum}`, "success"); loadStudents(); loadAllStudents();}}); }); }); };
-    window.addMultipleStudents = function() { if(!isAdmin){showAlert("Admin only","error");return;} let nameInps=document.querySelectorAll('.studentName'), rollInps=document.querySelectorAll('.familyRoll'); let firstRoll=rollInps[0]?.value.trim(); if(!firstRoll){showAlert("Enter roll","error");return;} let rollNum=parseInt(firstRoll); let toAdd=[]; nameInps.forEach((inp,idx)=>{ let name=inp.value.trim(); if(name){ let rv=rollInps[idx]?.value.trim(); if(parseInt(rv)!==rollNum){showAlert("Rolls must match","error");return;} toAdd.push(name);}}); if(toAdd.length===0){showAlert("Add at least one name","error");return;} let added=0; toAdd.forEach(name=>{ db.ref('students').push().set({name, roll:rollNum, fajr:0,dhuhr:0,asr:0,maghrib:0,isha:0, created:Date.now()}).then(()=>{added++; if(added===toAdd.length){showAlert(`${added} students added to roll ${rollNum}`,"success"); nameInps.forEach(i=>i.value=''); rollInps.forEach(r=>r.value=''); loadStudents(); loadDatabaseInfo(); loadAllStudents();}}); }); };
-    window.changePassword = async function(){ if(!isAdmin)return; let cur=document.getElementById('currentPassword').value, newp=document.getElementById('newPassword').value, conf=document.getElementById('confirmPassword').value; if(!cur||!newp||!conf){showAlert("Fill all","error");return;} if(newp!==conf){showAlert("Mismatch","error");return;} let stored= (await db.ref('admin/password').once('value')).val() || ADMIN_PASS; if(cur!==stored){showAlert("Wrong current","error");return;} await db.ref('admin').set({password:newp,updated:Date.now()}); ADMIN_PASS=newp; showAlert("Password updated","success"); document.getElementById('currentPassword').value='';document.getElementById('newPassword').value='';document.getElementById('confirmPassword').value=''; };
-    function loadStudents(){ if(!isAdmin)return; db.ref('students').once('value', snap=>{ let container=document.getElementById('studentList'); if(!snap.exists()){container.innerHTML="<p>No students</p>";return;} let families={}; snap.forEach(ch=>{ let s=ch.val(); let r=s.roll||0; if(!families[r])families[r]=[]; families[r].push({...s,id:ch.key});}); container.innerHTML=''; Object.keys(families).sort((a,b)=>a-b).forEach(roll=>{ let div=document.createElement('div'); div.className='student-group'; div.innerHTML=`<h4 style="margin:10px 0 8px;"><i class="fas fa-door-open"></i> Family Roll ${roll} (${families[roll].length})</h4>`; families[roll].forEach(s=>{ let total=(s.fajr||0)+(s.dhuhr||0)+(s.asr||0)+(s.maghrib||0)+(s.isha||0); let sub=document.createElement('div'); sub.className='student-item'; sub.innerHTML=`<div class="flex-between"><strong><i class="fas fa-user-graduate"></i> ${s.name}</strong><button onclick="deleteStudent('${s.id}','${s.name}')" style="background:#b3412c; border:none; border-radius:40px; padding:6px 14px; color:white;"><i class="fas fa-trash"></i></button></div><div style="display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-top:10px;"><span>فجر ${s.fajr||0}</span><span>ظہر ${s.dhuhr||0}</span><span>عصر ${s.asr||0}</span><span>مغرب ${s.maghrib||0}</span><span>عشاء ${s.isha||0}</span></div><div style="text-align:center; font-weight:bold;">📿 Total: ${total}</div>`; div.appendChild(sub);}); container.appendChild(div);}); }); }
-    window.deleteStudent = function(key,name){ if(!isAdmin)return; if(confirm(`Delete ${name}?`)){ db.ref('students/'+key).remove().then(()=>{ showAlert(`${name} removed`,"success"); loadStudents(); loadDatabaseInfo(); loadAllStudents();}); }};
-    async function loadFamilyReport(){ let roll=document.getElementById('reportRoll').value.trim(); if(!roll){showAlert("Enter roll","error");return;} let rollNum=parseInt(roll); let snap=await db.ref('students').orderByChild('roll').equalTo(rollNum).once('value'); let reportDiv=document.getElementById('reportContent'); if(!snap.exists()){reportDiv.innerHTML='<p class="error">Family not found</p>';return;} let familyTotal=0, html=`<div style="text-align:center;"><h3>🏠 Roll ${rollNum}</h3></div>`; snap.forEach(ch=>{ let s=ch.val(); let total=(s.fajr||0)+(s.dhuhr||0)+(s.asr||0)+(s.maghrib||0)+(s.isha||0); familyTotal+=total; html+=`<div class="student-item"><strong>${s.name}</strong><div class="stats"><div class="stat-box">فجر ${s.fajr||0}</div><div class="stat-box">ظہر ${s.dhuhr||0}</div><div class="stat-box">عصر ${s.asr||0}</div><div class="stat-box">مغرب ${s.maghrib||0}</div><div class="stat-box">عشاء ${s.isha||0}</div></div><div style="text-align:center;">✨ Total: ${total}</div></div>`; }); html+=`<div style="background:#1e3a2f; color:#ffefcf; padding:14px; border-radius:60px; text-align:center;">🏆 Family Grand Total: ${familyTotal}</div>`; reportDiv.innerHTML=html; }
-    function loadAllStudents(){ db.ref('students').once('value', snap=>{ let tbody=document.getElementById('allStudentsTable'); if(!snap.exists()){tbody.innerHTML='<tr><td colspan="8">No records</td></tr>';return;} let rows=[]; snap.forEach(ch=>{ let s=ch.val(); if(s.name&&s.roll!==undefined){ let total=(s.fajr||0)+(s.dhuhr||0)+(s.asr||0)+(s.maghrib||0)+(s.isha||0); rows.push({roll:s.roll,name:s.name,fajr:s.fajr||0,dhuhr:s.dhuhr||0,asr:s.asr||0,maghrib:s.maghrib||0,isha:s.isha||0,total});}}); rows.sort((a,b)=>a.roll-b.roll||a.name.localeCompare(b.name)); tbody.innerHTML=rows.map(r=>`<tr><td>${r.roll}</td><td>${r.name}</td><td>${r.fajr}</td><td>${r.dhuhr}</td><td>${r.asr}</td><td>${r.maghrib}</td><td>${r.isha}</td><td><strong>${r.total}</strong></td></tr>`).join(''); });}
-    async function loadDatabaseInfo(){ if(!isAdmin)return; let snap=await db.ref('students').once('value'); let families=new Set(), count=0; snap.forEach(ch=>{ let s=ch.val(); if(s.name&&s.roll){ count++; families.add(s.roll);}}); document.getElementById('totalStudents').innerText=count; document.getElementById('totalFamilies').innerText=families.size; }
-    document.addEventListener('input',function(e){if(e.target.classList&&e.target.classList.contains('familyRoll')){let val=e.target.value; document.querySelectorAll('.familyRoll').forEach(inp=>inp.value=val);}});
-    window.onload=()=>{ enforceDailyResetIfNeeded(); loadAllStudents(); document.getElementById('rollNumber').addEventListener('keypress',e=>{if(e.key==='Enter')loadStudentsByRoll();}); document.getElementById('adminPassword').addEventListener('keypress',e=>{if(e.key==='Enter')login();}); document.getElementById('reportRoll').addEventListener('keypress',e=>{if(e.key==='Enter')loadFamilyReport();}); };
+    window.onload = fetchData;
 </script>
+
 </body>
 </html>
