@@ -75,7 +75,7 @@
         .btn:active { transform: scale(0.98); }
 
         /* --- Data Display (Mobile Optimized) --- */
-        .row-header { display: none; } /* Hidden on mobile */
+        .row-header { display: none; } 
 
         #inventory-list { 
             display: flex; 
@@ -150,7 +150,6 @@
             border: 1px solid #d1f2eb;
         }
 
-        /* --- Tablet & Desktop View --- */
         @media (min-width: 768px) {
             .container { max-width: 900px; padding: 25px; }
             .form-row { flex-direction: row; align-items: flex-end; }
@@ -186,7 +185,6 @@
 <div class="container">
     <h1>Descent Book Centre</h1>
     
-    <!-- Add New Item Section -->
     <div class="add-item-box">
         <div class="form-row">
             <div class="form-group" style="flex: 2;">
@@ -201,13 +199,11 @@
         <button class="btn add-btn" onclick="addNewRow()">➕ Add New Item</button>
     </div>
 
-    <!-- Sync & Save Buttons -->
     <div class="actions">
         <button class="btn refresh-btn" onclick="fetchData()">🔄 Sync Data</button>
         <button class="btn save-btn" onclick="saveData()">💾 Save All</button>
     </div>
 
-    <!-- Desktop Header -->
     <div class="row-header">
         <div style="text-align: left; padding-left: 10px;">Item Name</div>
         <div>Stock In</div>
@@ -216,32 +212,30 @@
         <div>Sold Cash</div>
     </div>
     
-    <!-- Inventory List -->
     <div id="inventory-list">
-        <!-- Data dynamically loads here -->
+        <!-- Data loads here -->
     </div>
 </div>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxeLGiVjq9pcS2_ffIr_4_qfDOVlLJ6bjkSSaSZI4rtFy6u3U7tqOv07ebejhkgnawv/exec';
+    // اپنی نئی ڈپلائمنٹ آئی ڈی کا یو آر ایل یہاں ڈالیں
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxrlRwz-yFnD4eN2hFzc9E4PYxuJPIFUMFtw8qAVFh27C2CkPaHdLPylYNJATDdGjOy/exec';
 
-    // 1. Add New Item to List
     function addNewRow() {
         const name = document.getElementById('newName').value.trim();
         const qty = parseInt(document.getElementById('newQty').value) || 0;
         if(!name) return alert("Meharbani karke item ka naam likhen!");
         
         const list = document.getElementById('inventory-list');
-        const price = parseInt(name.match(/\d+/) || 0); // Price name se nikalta hai
+        const price = parseInt(name.match(/\d+/) || 0);
         
+        // نیا آئٹم اوپر شامل کریں
         list.insertAdjacentHTML('afterbegin', createRowHTML(name, qty, 0, qty, 0, price));
         
-        // Reset Inputs
         document.getElementById('newName').value = '';
         document.getElementById('newQty').value = '0';
     }
 
-    // 2. Generate Row HTML
     function createRowHTML(name, qty, sold, avail, value, price) {
         return `
             <div class="data-row">
@@ -265,7 +259,6 @@
         `;
     }
 
-    // 3. Fetch Data from Google Sheets
     async function fetchData() {
         const list = document.getElementById('inventory-list');
         list.innerHTML = '<p style="text-align:center;">Loading data...</p>';
@@ -273,17 +266,18 @@
             const response = await fetch(scriptURL);
             const data = await response.json();
             list.innerHTML = '';
+            // ہیڈر چھوڑ کر ڈیٹا دکھانا
             for (let i = 1; i < data.length; i++) {
                 const [name, qty, sold, avail, value] = data[i];
+                if (!name) continue; // اگر لائن خالی ہو تو چھوڑ دیں
                 const price = parseInt(name.match(/\d+/) || 0);
                 list.innerHTML += createRowHTML(name, qty, sold, avail, value, price);
             }
         } catch (e) { 
-            list.innerHTML = '<p style="text-align:center; color:red;">Sync Error!</p>';
+            list.innerHTML = '<p style="text-align:center; color:red;">Sync Error! Check Internet or Script URL.</p>';
         }
     }
 
-    // 4. Real-time Calculation
     function updateRow(input, price) {
         const row = input.closest('.data-row');
         const qty = parseInt(row.querySelector('.qty-in').value) || 0;
@@ -296,12 +290,10 @@
         badge.innerText = avail;
         row.querySelector('.val-text').innerText = cash;
 
-        // Stock Alert Color
         if(avail < 5) badge.classList.add('low-stock');
         else badge.classList.remove('low-stock');
     }
 
-    // 5. Save Back to Google Sheets
     async function saveData() {
         const rows = document.querySelectorAll('.data-row');
         let dataToSave = [["Item Name", "Quantity", "Sold", "Available", "Value"]];
@@ -311,23 +303,32 @@
                 row.querySelector('.item-name').innerText,
                 parseInt(row.querySelector('.qty-in').value) || 0,
                 parseInt(row.querySelector('.sold-in').value) || 0,
-                parseInt(row.querySelector('.avail-badge').innerText) || 0,
-                parseInt(row.querySelector('.val-text').innerText) || 0
+                0, // Available - اسکرپٹ خود حساب کرے گا
+                0  // Value - اسکرپٹ خود حساب کرے گا
             ]);
         });
 
+        const saveBtn = document.querySelector('.save-btn');
+        saveBtn.innerText = "Saving...";
+        saveBtn.disabled = true;
+
         try {
-            const saveBtn = document.querySelector('.save-btn');
-            saveBtn.innerText = "Saving...";
-            await fetch(scriptURL, { 
+            // یہاں mode: 'no-cors' ہٹا دیا گیا ہے تاکہ ڈیٹا صحیح پہنچے
+            const response = await fetch(scriptURL, { 
                 method: 'POST', 
-                mode: 'no-cors', 
                 body: JSON.stringify(dataToSave) 
             });
-            alert("Success! Google Sheet update ho gayi hai.");
-            saveBtn.innerText = "💾 Save All";
+            
+            const result = await response.text();
+            if(result === "Success") {
+                alert("کامیابی! ڈیٹا گوگل شیٹ میں محفوظ ہو گیا۔");
+                fetchData(); // ڈیٹا دوبارہ لوڈ کریں تاکہ حساب نظر آئے
+            }
         } catch (e) { 
-            alert("Nahi bach saka! Error aaya hai."); 
+            alert("ایرر! ڈیٹا سیو نہیں ہو سکا۔ دوبارہ کوشش کریں۔"); 
+        } finally {
+            saveBtn.innerText = "💾 Save All";
+            saveBtn.disabled = false;
         }
     }
 
